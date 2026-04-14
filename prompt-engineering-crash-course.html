@@ -1,0 +1,1420 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Prompt Engineering Crash Course</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0d0f;
+    --surface: #16161a;
+    --surface2: #1e1e24;
+    --surface3: #26262e;
+    --border: rgba(255,255,255,0.07);
+    --border2: rgba(255,255,255,0.13);
+    --text: #f0eff4;
+    --text-muted: #8b8a96;
+    --text-faint: #4a4a55;
+    --accent: #7c6cf8;
+    --accent2: #a99ef5;
+    --accent-bg: rgba(124,108,248,0.12);
+    --green: #3ecf8e;
+    --green-bg: rgba(62,207,142,0.1);
+    --green-border: rgba(62,207,142,0.25);
+    --red: #f97066;
+    --red-bg: rgba(249,112,102,0.1);
+    --red-border: rgba(249,112,102,0.25);
+    --amber: #f5a623;
+    --amber-bg: rgba(245,166,35,0.1);
+    --teal: #22d3ee;
+    --teal-bg: rgba(34,211,238,0.1);
+    --pink: #f472b6;
+    --pink-bg: rgba(244,114,182,0.1);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 16px;
+    line-height: 1.7;
+    min-height: 100vh;
+  }
+
+  /* ── NOISE TEXTURE OVERLAY ── */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    height: 60px;
+    background: rgba(13,13,15,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 2rem;
+    z-index: 100;
+  }
+  .nav-logo {
+    font-family: 'Syne', sans-serif;
+    font-weight: 800;
+    font-size: 16px;
+    color: var(--accent2);
+    letter-spacing: -0.3px;
+  }
+  .nav-links {
+    display: flex;
+    gap: 4px;
+    list-style: none;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .nav-links::-webkit-scrollbar { display: none; }
+  .nav-links a {
+    color: var(--text-muted);
+    text-decoration: none;
+    font-size: 13px;
+    padding: 6px 12px;
+    border-radius: 20px;
+    white-space: nowrap;
+    transition: all 0.2s;
+  }
+  .nav-links a:hover { color: var(--text); background: var(--surface3); }
+
+  /* ── LAYOUT ── */
+  main { padding-top: 60px; }
+  .section {
+    max-width: 860px;
+    margin: 0 auto;
+    padding: 5rem 1.5rem;
+    position: relative;
+    z-index: 1;
+  }
+  .section + .section {
+    border-top: 1px solid var(--border);
+  }
+
+  /* ── HERO ── */
+  .hero {
+    text-align: center;
+    padding: 7rem 1.5rem 5rem;
+  }
+  .hero-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--accent-bg);
+    border: 1px solid rgba(124,108,248,0.25);
+    color: var(--accent2);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    padding: 5px 14px;
+    border-radius: 20px;
+    margin-bottom: 2rem;
+  }
+  .hero h1 {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(2.4rem, 7vw, 4.2rem);
+    font-weight: 800;
+    line-height: 1.1;
+    letter-spacing: -2px;
+    margin-bottom: 1.5rem;
+  }
+  .hero h1 span {
+    background: linear-gradient(135deg, #7c6cf8, #22d3ee, #f472b6);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  .hero-sub {
+    font-size: 18px;
+    color: var(--text-muted);
+    max-width: 540px;
+    margin: 0 auto 2.5rem;
+    font-weight: 300;
+    line-height: 1.65;
+  }
+  .hero-stats {
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 3rem;
+  }
+  .stat {
+    text-align: center;
+  }
+  .stat-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--accent2);
+    line-height: 1;
+    margin-bottom: 4px;
+  }
+  .stat-label {
+    font-size: 12px;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+  .hero-toc {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+  .toc-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    color: var(--text-muted);
+    font-size: 13px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+  .toc-pill:hover { color: var(--text); border-color: var(--accent); background: var(--accent-bg); }
+  .toc-pill .num {
+    background: var(--surface3);
+    color: var(--accent2);
+    font-size: 10px;
+    font-weight: 700;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Syne', sans-serif;
+  }
+
+  /* ── SECTION HEADERS ── */
+  .section-label {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-faint);
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 2px;
+    font-weight: 500;
+    margin-bottom: 1rem;
+  }
+  .section-label::before {
+    content: '';
+    width: 24px;
+    height: 1px;
+    background: var(--text-faint);
+    display: block;
+  }
+  .section-title {
+    font-family: 'Syne', sans-serif;
+    font-size: clamp(1.6rem, 4vw, 2.4rem);
+    font-weight: 700;
+    letter-spacing: -1px;
+    line-height: 1.2;
+    margin-bottom: 1rem;
+  }
+  .section-desc {
+    font-size: 16px;
+    color: var(--text-muted);
+    max-width: 600px;
+    margin-bottom: 3rem;
+    font-weight: 300;
+  }
+
+  /* ── WHAT IS PROMPT ENGINEERING ── */
+  .what-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  @media (max-width: 600px) { .what-grid { grid-template-columns: 1fr; } }
+  .what-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.5rem;
+    transition: border-color 0.2s;
+  }
+  .what-card:hover { border-color: var(--border2); }
+  .what-card .icon {
+    font-size: 28px;
+    margin-bottom: 12px;
+    display: block;
+  }
+  .what-card h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+  .what-card p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.65;
+  }
+  .quote-block {
+    border-left: 2px solid var(--accent);
+    padding: 1.25rem 1.5rem;
+    background: var(--accent-bg);
+    border-radius: 0 12px 12px 0;
+    margin: 2rem 0;
+  }
+  .quote-block p {
+    font-size: 17px;
+    color: var(--text);
+    font-style: italic;
+    line-height: 1.6;
+    font-weight: 300;
+  }
+
+  /* ── WHY MATTERS ── */
+  .analogy-showcase {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    overflow: hidden;
+    margin-bottom: 2rem;
+  }
+  .analogy-header {
+    background: var(--surface2);
+    border-bottom: 1px solid var(--border);
+    padding: 1rem 1.5rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .analogy-header h3 {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+  }
+  .analogy-body {
+    padding: 1.5rem;
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+  .analogy-body strong { color: var(--text); font-weight: 500; }
+
+  /* ── TECHNIQUE SECTIONS ── */
+  .technique-hero {
+    display: flex;
+    align-items: flex-start;
+    gap: 1rem;
+    margin-bottom: 2rem;
+    padding: 1.5rem;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+  }
+  .technique-icon-big {
+    font-size: 3rem;
+    line-height: 1;
+    flex-shrink: 0;
+    width: 64px;
+    height: 64px;
+    background: var(--surface2);
+    border-radius: 14px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .technique-meta h2 {
+    font-family: 'Syne', sans-serif;
+    font-size: 22px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin-bottom: 6px;
+  }
+  .technique-meta p {
+    font-size: 14px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+  .technique-badge {
+    display: inline-block;
+    background: var(--accent-bg);
+    color: var(--accent2);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    padding: 3px 10px;
+    border-radius: 20px;
+    margin-top: 8px;
+    border: 1px solid rgba(124,108,248,0.2);
+  }
+
+  .analogy-pill {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: var(--green-bg);
+    border: 1px solid var(--green-border);
+    border-radius: 12px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 2rem;
+  }
+  .analogy-pill .ap-icon { font-size: 20px; flex-shrink: 0; margin-top: 2px; }
+  .analogy-pill .ap-label { font-size: 10px; font-weight: 600; color: var(--green); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 4px; }
+  .analogy-pill .ap-text { font-size: 14px; color: #a7f0ce; line-height: 1.65; }
+
+  /* ── COMPARISON CARDS ── */
+  .comparison-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+  @media (max-width: 620px) { .comparison-grid { grid-template-columns: 1fr; } }
+  .prompt-card {
+    border-radius: 14px;
+    border: 1px solid var(--border);
+    overflow: hidden;
+  }
+  .pc-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 10px 14px;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    border-bottom: 1px solid;
+  }
+  .prompt-card.bad .pc-header {
+    background: var(--red-bg);
+    border-bottom-color: var(--red-border);
+    color: var(--red);
+  }
+  .prompt-card.good .pc-header {
+    background: var(--green-bg);
+    border-bottom-color: var(--green-border);
+    color: var(--green);
+  }
+  .pc-dot {
+    width: 8px; height: 8px;
+    border-radius: 50%;
+  }
+  .bad .pc-dot { background: var(--red); }
+  .good .pc-dot { background: var(--green); }
+  .pc-body { background: var(--surface); }
+  .pc-prompt {
+    padding: 14px;
+    border-bottom: 1px solid var(--border);
+  }
+  .pc-prompt-label {
+    font-size: 10px;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+    font-weight: 600;
+  }
+  .pc-prompt-text {
+    font-family: 'DM Sans', monospace;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+    background: var(--surface2);
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    white-space: pre-wrap;
+  }
+  .pc-response {
+    padding: 14px;
+  }
+  .pc-response-label {
+    font-size: 10px;
+    color: var(--text-faint);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 8px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .pc-response-label::before {
+    content: '🤖';
+    font-size: 12px;
+  }
+  .pc-response-text {
+    font-size: 13px;
+    line-height: 1.65;
+  }
+  .bad .pc-response-text { color: #f0978d; }
+  .good .pc-response-text { color: #a7f0ce; }
+
+  /* ── WHY BOX ── */
+  .why-box {
+    background: var(--surface2);
+    border: 1px solid var(--border2);
+    border-radius: 12px;
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 2rem;
+  }
+  .why-box h4 {
+    font-family: 'Syne', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .why-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .why-list li {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.5;
+    display: flex;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .why-list li::before {
+    content: '→';
+    color: var(--accent2);
+    font-size: 12px;
+    margin-top: 2px;
+    flex-shrink: 0;
+  }
+
+  /* ── USE WHEN ── */
+  .use-when {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-bottom: 2rem;
+  }
+  .use-tag {
+    background: var(--surface3);
+    border: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 12px;
+    padding: 4px 12px;
+    border-radius: 20px;
+  }
+
+  /* ── TIPS ROW ── */
+  .tips-row {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 10px;
+    margin-bottom: 2rem;
+  }
+  .tip-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 1rem;
+  }
+  .tip-card .tip-num {
+    font-family: 'Syne', sans-serif;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--accent2);
+    letter-spacing: 1px;
+    margin-bottom: 6px;
+  }
+  .tip-card p { font-size: 13px; color: var(--text-muted); line-height: 1.5; }
+
+  /* ── CHEAT SHEET ── */
+  .cheatsheet-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 14px;
+    border-radius: 12px;
+    overflow: hidden;
+  }
+  .cheatsheet-table th {
+    background: var(--surface2);
+    padding: 12px 16px;
+    text-align: left;
+    font-family: 'Syne', sans-serif;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-muted);
+    letter-spacing: 0.5px;
+    border-bottom: 1px solid var(--border);
+  }
+  .cheatsheet-table td {
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    color: var(--text-muted);
+    font-size: 13px;
+    vertical-align: top;
+    line-height: 1.5;
+  }
+  .cheatsheet-table tr:last-child td { border-bottom: none; }
+  .cheatsheet-table tr:hover td { background: var(--surface2); }
+  .cheatsheet-table td:first-child {
+    font-family: 'Syne', sans-serif;
+    font-weight: 600;
+    color: var(--text);
+    white-space: nowrap;
+  }
+  .tech-badge-inline {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-size: 11px;
+    font-weight: 600;
+    margin-bottom: 4px;
+  }
+
+  /* ── DIVIDER ── */
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border2), transparent);
+    margin: 2rem 0;
+  }
+
+  /* ── GOLDEN RULES ── */
+  .rules-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 1rem;
+  }
+  .rule-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    padding: 1.25rem;
+    transition: all 0.2s;
+  }
+  .rule-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .rule-number {
+    font-family: 'Syne', sans-serif;
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--text-faint);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  .rule-card h3 { font-size: 15px; font-weight: 500; margin-bottom: 6px; font-family: 'Syne', sans-serif; }
+  .rule-card p { font-size: 13px; color: var(--text-muted); line-height: 1.55; }
+
+  /* ── FOOTER ── */
+  footer {
+    border-top: 1px solid var(--border);
+    padding: 3rem 1.5rem;
+    text-align: center;
+    color: var(--text-faint);
+    font-size: 13px;
+    position: relative;
+    z-index: 1;
+  }
+  footer strong { color: var(--text-muted); }
+
+  /* ── ANIMATIONS ── */
+  @keyframes fadeUp {
+    from { opacity: 0; transform: translateY(20px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .hero { animation: fadeUp 0.6s ease both; }
+  .section { animation: fadeUp 0.5s ease both; }
+
+  /* ── SCROLLBAR ── */
+  ::-webkit-scrollbar { width: 6px; }
+  ::-webkit-scrollbar-track { background: var(--bg); }
+  ::-webkit-scrollbar-thumb { background: var(--surface3); border-radius: 3px; }
+
+  /* ── HIGHLIGHT ── */
+  .hl { color: var(--accent2); }
+  .hl-green { color: var(--green); }
+  .hl-amber { color: var(--amber); }
+  .hl-teal { color: var(--teal); }
+  .hl-pink { color: var(--pink); }
+
+  /* ── STEP FLOW ── */
+  .steps {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    position: relative;
+    padding-left: 2rem;
+    margin-bottom: 2rem;
+  }
+  .steps::before {
+    content: '';
+    position: absolute;
+    left: 11px;
+    top: 20px;
+    bottom: 20px;
+    width: 1px;
+    background: linear-gradient(to bottom, var(--accent), transparent);
+  }
+  .step-item {
+    display: flex;
+    gap: 1rem;
+    padding-bottom: 1.5rem;
+    position: relative;
+  }
+  .step-dot {
+    position: absolute;
+    left: -2rem;
+    top: 4px;
+    width: 10px;
+    height: 10px;
+    background: var(--accent);
+    border-radius: 50%;
+    border: 2px solid var(--bg);
+    flex-shrink: 0;
+  }
+  .step-content h4 {
+    font-size: 15px;
+    font-weight: 500;
+    font-family: 'Syne', sans-serif;
+    margin-bottom: 4px;
+  }
+  .step-content p { font-size: 13px; color: var(--text-muted); line-height: 1.6; }
+
+  .big-tip {
+    background: linear-gradient(135deg, rgba(124,108,248,0.08), rgba(34,211,238,0.05));
+    border: 1px solid rgba(124,108,248,0.2);
+    border-radius: 16px;
+    padding: 1.5rem;
+    margin-bottom: 2rem;
+    text-align: center;
+  }
+  .big-tip .bt-icon { font-size: 2.5rem; margin-bottom: 12px; }
+  .big-tip h3 { font-family: 'Syne', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 8px; }
+  .big-tip p { font-size: 14px; color: var(--text-muted); line-height: 1.65; max-width: 500px; margin: 0 auto; }
+
+  @media (max-width: 480px) {
+    nav { padding: 0 1rem; }
+    .section { padding: 3rem 1rem; }
+    .hero { padding: 5rem 1rem 3rem; }
+    .technique-hero { flex-direction: column; }
+    .comparison-grid { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+
+<nav>
+  <div class="nav-logo">⚡ PromptCraft</div>
+  <ul class="nav-links">
+    <li><a href="#what">What is it?</a></li>
+    <li><a href="#why">Why it matters</a></li>
+    <li><a href="#zero-shot">Zero-shot</a></li>
+    <li><a href="#few-shot">Few-shot</a></li>
+    <li><a href="#cot">Chain of Thought</a></li>
+    <li><a href="#role">Role Prompting</a></li>
+    <li><a href="#system">System Prompt</a></li>
+    <li><a href="#rules">Golden Rules</a></li>
+    <li><a href="#cheatsheet">Cheat Sheet</a></li>
+  </ul>
+</nav>
+
+<main>
+
+<!-- ══ HERO ══ -->
+<section class="hero" id="home">
+  <div class="hero-eyebrow">✦ Free Crash Course</div>
+  <h1>Prompt Engineering<br><span>Crash Course</span></h1>
+  <p class="hero-sub">Learn how to talk to AI the right way. No coding needed. Just better questions — and better results.</p>
+  <div class="hero-stats">
+    <div class="stat"><div class="stat-num">5</div><div class="stat-label">Core Techniques</div></div>
+    <div class="stat"><div class="stat-num">10+</div><div class="stat-label">Real Examples</div></div>
+    <div class="stat"><div class="stat-num">100%</div><div class="stat-label">Free</div></div>
+  </div>
+  <div class="hero-toc">
+    <a href="#what" class="toc-pill"><span class="num">0</span> What is Prompt Engineering?</a>
+    <a href="#zero-shot" class="toc-pill"><span class="num">1</span> Zero-shot</a>
+    <a href="#few-shot" class="toc-pill"><span class="num">2</span> Few-shot</a>
+    <a href="#cot" class="toc-pill"><span class="num">3</span> Chain of Thought</a>
+    <a href="#role" class="toc-pill"><span class="num">4</span> Role Prompting</a>
+    <a href="#system" class="toc-pill"><span class="num">5</span> System Prompt</a>
+    <a href="#rules" class="toc-pill"><span class="num">★</span> Golden Rules</a>
+  </div>
+</section>
+
+<!-- ══ WHAT IS PROMPT ENGINEERING ══ -->
+<section class="section" id="what">
+  <div class="section-label">Foundation</div>
+  <h2 class="section-title">What is Prompt Engineering?</h2>
+  <p class="section-desc">Before we dive into techniques, let's understand what prompting actually means — and why it's a skill worth learning.</p>
+
+  <div class="quote-block">
+    <p>"A <strong style="color:var(--accent2)">prompt</strong> is any text you type to an AI. <strong style="color:var(--accent2)">Prompt Engineering</strong> is the skill of writing those prompts in a smart way — so the AI gives you useful, accurate, and well-formatted answers."</p>
+  </div>
+
+  <div class="analogy-showcase">
+    <div class="analogy-header">
+      <span>🍽️</span>
+      <h3>The Restaurant Analogy</h3>
+    </div>
+    <div class="analogy-body">
+      <p>Imagine walking into a restaurant and saying <strong>"Give me food."</strong><br>The waiter has no idea what you want. Do you want veg or non-veg? Spicy or mild? Breakfast or dinner?</p>
+      <br>
+      <p>But if you say: <strong>"One masala dosa, less spicy, with extra chutney please"</strong> — you get exactly what you want.</p>
+      <br>
+      <p><strong>The AI is the chef. You are the customer. Your prompt is the order.</strong> A good order = a perfect meal. A vague order = a confused chef.</p>
+    </div>
+  </div>
+
+  <div class="what-grid">
+    <div class="what-card">
+      <span class="icon">🧠</span>
+      <h3>AI is powerful but literal</h3>
+      <p>AI models are extremely capable, but they respond to exactly what you say. If you're vague, they guess. If you're clear, they deliver.</p>
+    </div>
+    <div class="what-card">
+      <span class="icon">🎯</span>
+      <h3>The right input = right output</h3>
+      <p>The quality of your prompt directly controls the quality of the output. Better prompt = better answer, every single time.</p>
+    </div>
+    <div class="what-card">
+      <span class="icon">🚫</span>
+      <h3>What makes a BAD prompt</h3>
+      <p>Too short. Too vague. No context. No format. No audience. Missing the "what", "who", and "how" of your request.</p>
+    </div>
+    <div class="what-card">
+      <span class="icon">✅</span>
+      <h3>What makes a GOOD prompt</h3>
+      <p>Clear task + audience + format + constraints. The AI should have zero confusion about what you want.</p>
+    </div>
+  </div>
+
+  <div class="divider"></div>
+
+  <h3 style="font-family:'Syne',sans-serif; font-size:18px; font-weight:600; margin-bottom:1.5rem;">The anatomy of a great prompt</h3>
+  <div class="steps">
+    <div class="step-item">
+      <div class="step-dot"></div>
+      <div class="step-content">
+        <h4>Task — What do you want?</h4>
+        <p>Start with a clear action word. Write, summarise, explain, classify, translate, list, compare...</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-dot"></div>
+      <div class="step-content">
+        <h4>Context — What's the background?</h4>
+        <p>Give the AI enough information to understand your situation. "I'm a student", "This is for a sales email", "My audience is beginners".</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-dot"></div>
+      <div class="step-content">
+        <h4>Format — How should it look?</h4>
+        <p>Tell the AI the structure you want. "In 3 bullet points", "As a table", "In under 100 words", "With an introduction and conclusion".</p>
+      </div>
+    </div>
+    <div class="step-item">
+      <div class="step-dot"></div>
+      <div class="step-content">
+        <h4>Tone — How should it sound?</h4>
+        <p>Casual, formal, funny, simple, technical, friendly. The AI will match whatever tone you specify.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ══ WHY IT MATTERS ══ -->
+<section class="section" id="why">
+  <div class="section-label">Why it matters</div>
+  <h2 class="section-title">Same AI, very different results</h2>
+  <p class="section-desc">This is the most important thing to understand. The AI doesn't change — only your prompt does. Look at this:</p>
+
+  <div class="comparison-grid">
+    <div class="prompt-card bad">
+      <div class="pc-header"><div class="pc-dot"></div> Bad Prompt</div>
+      <div class="pc-body">
+        <div class="pc-prompt">
+          <div class="pc-prompt-label">You typed</div>
+          <div class="pc-prompt-text">Tell me about marketing.</div>
+        </div>
+        <div class="pc-response">
+          <div class="pc-response-label">LLM Response</div>
+          <div class="pc-response-text">Marketing is the process of promoting products or services to consumers. It includes advertising, social media, content marketing, email marketing, SEO, and many other strategies. The goal is to reach target audiences and convert them into customers. Marketing has evolved significantly with the rise of digital platforms...</div>
+        </div>
+      </div>
+    </div>
+    <div class="prompt-card good">
+      <div class="pc-header"><div class="pc-dot"></div> Good Prompt</div>
+      <div class="pc-body">
+        <div class="pc-prompt">
+          <div class="pc-prompt-label">You typed</div>
+          <div class="pc-prompt-text">I run a small bakery in Chennai. Write 3 Instagram captions for my fresh bread posts. Tone: warm, local, and appetising. Keep each caption under 60 words.</div>
+        </div>
+        <div class="pc-response">
+          <div class="pc-response-label">LLM Response</div>
+          <div class="pc-response-text">1. "Hot out of the oven and straight to your heart 🍞 Our fresh loaves are baked every morning — come in before 9 AM for the best pick!" <br><br>2. "Nothing beats the smell of warm bread on a Chennai morning. Visit us today and take a loaf home. Pure goodness, zero preservatives."</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="big-tip">
+    <div class="bt-icon">💡</div>
+    <h3>The Golden Insight</h3>
+    <p>The AI didn't get smarter. You just gave it better instructions. Prompt engineering is not about the AI — it's about <strong style="color:var(--accent2)">you</strong> getting better at communicating with it.</p>
+  </div>
+</section>
+
+<!-- ══ ZERO-SHOT ══ -->
+<section class="section" id="zero-shot">
+  <div class="section-label">Technique 01</div>
+
+  <div class="technique-hero">
+    <div class="technique-icon-big">🎯</div>
+    <div class="technique-meta">
+      <h2>Zero-shot Prompting</h2>
+      <p>Ask the AI directly — with no examples, no demos. Just your task and your context. You trust the AI's training to handle it.</p>
+      <span class="technique-badge">Beginner Friendly</span>
+    </div>
+  </div>
+
+  <div class="analogy-pill">
+    <div class="ap-icon">🧑‍💼</div>
+    <div>
+      <div class="ap-label">Simple Analogy</div>
+      <div class="ap-text">You walk up to a stranger who's a doctor and ask: "I have a headache — what could cause it?" You gave zero context, zero examples. If they're knowledgeable, they'll give a useful answer. That's zero-shot: just ask, trust the AI's knowledge.</div>
+    </div>
+  </div>
+
+  <h3 style="font-size:14px; font-weight:500; color:var(--text-muted); margin-bottom:10px;">Use it when:</h3>
+  <div class="use-when">
+    <span class="use-tag">Simple questions</span>
+    <span class="use-tag">Definitions</span>
+    <span class="use-tag">Summaries</span>
+    <span class="use-tag">Translations</span>
+    <span class="use-tag">Quick rewrites</span>
+    <span class="use-tag">Factual lookups</span>
+  </div>
+
+  <div class="comparison-grid">
+    <div class="prompt-card bad">
+      <div class="pc-header"><div class="pc-dot"></div> Bad Prompt</div>
+      <div class="pc-body">
+        <div class="pc-prompt">
+          <div class="pc-prompt-label">You typed</div>
+          <div class="pc-prompt-text">write something about climate</div>
+        </div>
+        <div class="pc-response">
+          <div class="pc-response-label">LLM Response</div>
+          <div class="pc-response-text">Climate is a broad topic. It can refer to weather patterns, global warming, biodiversity, or oceanography. Could you please clarify what format you need — essay, bullet points, short or long? Also, who is your target audience? I want to make sure I write the right thing for you...</div>
+        </div>
+      </div>
+    </div>
+    <div class="prompt-card good">
+      <div class="pc-header"><div class="pc-dot"></div> Good Prompt</div>
+      <div class="pc-body">
+        <div class="pc-prompt">
+          <div class="pc-prompt-label">You typed</div>
+          <div class="pc-prompt-text">Write a 3-sentence explanation of climate change for a 10-year-old child. Use simple words and a relatable example.</div>
+        </div>
+        <div class="pc-response">
+          <div class="pc-response-label">LLM Response</div>
+          <div class="pc-response-text">Climate change means the Earth is getting warmer because humans burn fuels like petrol and coal, releasing gases that trap heat — like a blanket around the Earth. This causes hotter summers, stronger storms, and rising seas. We can help by using less electricity, recycling, and planting more trees!</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="why-box">
+    <h4>💬 Why the good prompt works</h4>
+    <ul class="why-list">
+      <li>It sets the exact length (3 sentences) — no guessing for the AI</li>
+      <li>It names the audience (10-year-old) — so the AI picks simple vocabulary</li>
+      <li>It asks for a "relatable example" — giving creative direction</li>
+      <li>The topic is now specific: "climate change", not vague "climate"</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ══ FEW-SHOT ══ -->
+<section class="section" id="few-shot">
+  <div class="section-label">Technique 02</div>
+
+  <div class="technique-hero">
+    <div class="technique-icon-big">📚</div>
+    <div class="technique-meta">
+      <h2>Few-shot Prompting</h2>
+      <p>You teach by example. Give the AI 2–5 sample input→output pairs, then ask it to apply the same pattern to a new input.</p>
+      <span class="technique-badge hl-green" style="background:var(--green-bg);border-color:var(--green-border);color:var(--green);">Most Powerful for Formatting</span>
+    </div>
+  </div>
+
+  <div class="analogy-pill">
+    <div class="ap-icon">🏢</div>
+    <div>
+      <div class="ap-label">Simple Analogy</div>
+      <div class="ap-text">Think of training a new intern. Instead of writing a 10-page manual, you show them 3 emails you already wrote and say "Write more like these." They pick up your style instantly. That's few-shot — you teach by showing, not explaining.</div>
+    </div>
+  </div>
+
+  <h3 style="font-size:14px; font-weight:500; color:var(--text-muted); margin-bottom:10px;">Use it when:</h3>
+  <div class="use-when">
+    <span class="use-tag">Custom writing style</span>
+    <span class="use-tag">Sentiment classification</span>
+    <span class="use-tag">Data formatting</span>
+    <span class="use-tag">Consistent outputs</span>
+    <span class="use-tag">Brand voice</span>
+  </div>
+
+  <div class="comparison-grid">
+    <div class="prompt-card bad">
+      <div class="pc-header"><div class="pc-dot"></div> Bad Prompt</div>
+      <div class="pc-body">
+        <div class="pc-prompt">
+          <div class="pc-prompt-label">You typed</div>
+          <div class="pc-prompt-text">Classify these reviews as positive or negative:
+"The food was cold."
+"Absolutely loved it!"</div>
+        </div>
+        <div class="pc-response">
+          <div class="pc-response-label">LLM Response</div>
+          <div class="pc-response-text">The first review appears negative since cold food is undesirable. The second is clearly positive. Though context matters — cold food could be intentional in some cases like salads or ice cream. Would you like detailed reasoning for each?</div>
+        </div>
+      </div>
+    </div>
+    <div class="prompt-card good">
+      <div class="pc-header"><div class="pc-dot"></div> Good Prompt (Few-shot)</div>
+      <div class="pc-body">
+        <div class="pc-prompt">
+          <div class="pc-prompt-label">You typed</div>
+          <div class="pc-prompt-text">Review: "Great service!" → Positive
+Review: "Very rude staff." → Negative
+Review: "Average, nothing special." → Neutral
+
+Now classify:
+Review: "The food was cold." →
+Review: "Absolutely loved it!" →</div>
+        </div>
+        <div class="pc-response">
+          <div class="pc-response-label">LLM Response</div>
+          <div class="pc-response-text">Review: "The food was cold." → Negative<br>Review: "Absolutely loved it!" → Positive</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="why-box">
+    <h4>💬 Why the good prompt works</h4>
+    <ul class="why-list">
+      <li>The examples show the exact output format — one clean label, no essays</li>
+      <li>The AI learns the pattern from 3 pairs and applies it exactly</li>
+      <li>You eliminated the AI's tendency to overthink or over-explain</li>
+      <li>Great for batch processing — the AI stays consistent across all inputs</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ══ CHAIN OF THOUGHT ══ -->
+<section class="section" id="cot">
+  <div class="section-label">Technique 03</div>
+
+  <div class="technique-hero">
+    <div class="technique-icon-big">🧠</div>
+    <div class="technique-meta">
+      <h2>Chain of Thought (CoT)</h2>
+      <p>Ask the AI to think step-by-step before giving a final answer. This forces logical reasoning and dramatically reduces mistakes on complex tasks.</p>
+      <span class="technique-badge" style="background:var(--amber-bg);border-color:rgba(245,166,35,0.25);color:var(--amber);">Best for Complex Problems</span>
+    </div>
+  </div>
+
+  <div class="analogy-pill">
+    <div class="ap-icon">📝</div>
+    <div>
+      <div class="ap-label">Simple Analogy</div>
+      <div class="ap-text">In school, your maths teacher always said: "Show your working!" If you just write the answer, you might guess wrong. But when you write each step, you catch your own mistakes. Telling the AI "think step by step" does exactly this — it forces careful reasoning.</div>
+    </div>
+  </div>
+
+  <h3 style="font-size:14px; font-weight:500; color:var(--text-muted); margin-bottom:10px;">Use it when:</h3>
+  <div class="use-when">
+    <span class="use-tag">Maths & calculations</span>
+    <span class="use-tag">Logical puzzles</span>
+    <span class="use-tag">Multi-step decisions</span>
+    <span class="use-tag">Debugging code</span>
+    <span class="use-tag">Planning problems</span>
+  </div>
+
+  <div class="comparison-grid">
+    <div class="prompt-card bad">
+      <div class="pc-header"><div class="pc-dot"></div> Bad Prompt</div>
+      <div class="pc-body">
+        <div class="pc-prompt">
+          <div class="pc-prompt-label">You typed</div>
+          <div class="pc-prompt-text">A train goes 60 km/h for 2.5 hours, then 80 km/h for 1.5 hours. Total distance?</div>
+        </div>
+        <div class="pc-response">
+          <div class="pc-response-label">LLM Response</div>
+          <div class="pc-response-text">The total distance is 270 km.</div>
+        </div>
+      </div>
+    </div>
+    <div class="prompt-card good">
+      <div class="pc-header"><div class="pc-dot"></div> Good Prompt (CoT)</div>
+      <div class="pc-body">
+        <div class="pc-prompt">
+          <div class="pc-prompt-label">You typed</div>
+          <div class="pc-prompt-text">A train goes 60 km/h for 2.5 hours, then 80 km/h for 1.5 hours. Total distance?
+
+Think step by step.</div>
+        </div>
+        <div class="pc-response">
+          <div class="pc-response-label">LLM Response</div>
+          <div class="pc-response-text">Step 1: First segment — Speed = 60 km/h, Time = 2.5 hrs → Distance = 60 × 2.5 = 150 km.<br><br>Step 2: Second segment — Speed = 80 km/h, Time = 1.5 hrs → Distance = 80 × 1.5 = 120 km.<br><br>Step 3: Total = 150 + 120 = <strong>270 km</strong>.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="why-box">
+    <h4>💬 Why the good prompt works</h4>
+    <ul class="why-list">
+      <li>"Think step by step" is a magic phrase — it activates the AI's reasoning mode</li>
+      <li>You can now verify each step independently — great for catching errors</li>
+      <li>Even when the final answer is the same, you can trust it more</li>
+      <li>Works for business decisions, not just maths: "Analyse this situation step by step"</li>
+    </ul>
+  </div>
+
+  <div class="tips-row">
+    <div class="tip-card">
+      <div class="tip-num">PRO TIP 01</div>
+      <p>Add "Show your reasoning" or "Explain each step" for even more transparency.</p>
+    </div>
+    <div class="tip-card">
+      <div class="tip-num">PRO TIP 02</div>
+      <p>For business: "List pros and cons before concluding" triggers the same deep thinking.</p>
+    </div>
+    <div class="tip-card">
+      <div class="tip-num">PRO TIP 03</div>
+      <p>Combine with role prompting: "You are an expert. Think step by step."</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ ROLE PROMPTING ══ -->
+<section class="section" id="role">
+  <div class="section-label">Technique 04</div>
+
+  <div class="technique-hero">
+    <div class="technique-icon-big">🎭</div>
+    <div class="technique-meta">
+      <h2>Role Prompting</h2>
+      <p>Give the AI a character or professional identity. This shapes its tone, vocabulary, depth of knowledge, and overall approach to your question.</p>
+      <span class="technique-badge" style="background:var(--pink-bg);border-color:rgba(244,114,182,0.25);color:var(--pink);">Great for Expertise & Tone</span>
+    </div>
+  </div>
+
+  <div class="analogy-pill">
+    <div class="ap-icon">👨‍⚕️</div>
+    <div>
+      <div class="ap-label">Simple Analogy</div>
+      <div class="ap-text">Ask your auto driver about chest pain — you get a vague answer. Ask your family doctor the same question — you get a structured, expert, medically accurate response. Same question. Different role. Completely different quality of answer. Role prompting works the same way with AI.</div>
+    </div>
+  </div>
+
+  <h3 style="font-size:14px; font-weight:500; color:var(--text-muted); margin-bottom:10px;">Use it when:</h3>
+  <div class="use-when">
+    <span class="use-tag">Professional feedback</span>
+    <span class="use-tag">Audience-specific writing</span>
+    <span class="use-tag">Tone control</span>
+    <span class="use-tag">Simulating an expert</span>
+    <span class="use-tag">Creative personas</span>
+  </div>
+
+  <div class="comparison-grid">
+    <div class="prompt-card bad">
+      <div class="pc-header"><div class="pc-dot"></div> Bad Prompt</div>
+      <div class="pc-body">
+        <div class="pc-prompt">
+          <div class="pc-prompt-label">You typed</div>
+          <div class="pc-prompt-text">Give me feedback on my business idea: I want to sell handmade candles online.</div>
+        </div>
+        <div class="pc-response">
+          <div class="pc-response-label">LLM Response</div>
+          <div class="pc-response-text">That sounds like a great idea! Handmade candles are very popular right now. You could sell them on Etsy, Instagram, or your own website. Make sure to use nice packaging and market yourself on social media. Good luck!</div>
+        </div>
+      </div>
+    </div>
+    <div class="prompt-card good">
+      <div class="pc-header"><div class="pc-dot"></div> Good Prompt (Role)</div>
+      <div class="pc-body">
+        <div class="pc-prompt">
+          <div class="pc-prompt-label">You typed</div>
+          <div class="pc-prompt-text">You are a veteran startup mentor with 15 years of e-commerce experience. Give critical, honest feedback on this idea: I want to sell handmade candles online in India.</div>
+        </div>
+        <div class="pc-response">
+          <div class="pc-response-label">LLM Response</div>
+          <div class="pc-response-text">The candle market is crowded — your differentiation strategy is everything. Before investing, answer: What's your unique angle (eco-friendly, local scents, luxury gifting)? Can you price above ₹400 and still profit after packaging + shipping? Start with 30 units, test on Instagram Reels, validate demand before building a website.</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="why-box">
+    <h4>💬 Why the good prompt works</h4>
+    <ul class="why-list">
+      <li>The role ("veteran mentor, 15 years e-commerce") sets both expertise and authority</li>
+      <li>"Critical, honest" as a tone instruction prevents generic encouragement</li>
+      <li>You get actionable, specific advice — not cheerleading</li>
+      <li>Adding "in India" grounds the response in your actual market context</li>
+    </ul>
+  </div>
+
+  <h3 style="font-family:'Syne',sans-serif; font-size:16px; font-weight:600; margin-bottom:1rem;">Powerful roles you can try:</h3>
+  <div class="tips-row">
+    <div class="tip-card">
+      <div class="tip-num">ROLE IDEAS</div>
+      <p>"You are a senior software engineer at Google reviewing my code."</p>
+    </div>
+    <div class="tip-card">
+      <div class="tip-num">ROLE IDEAS</div>
+      <p>"You are a primary school teacher. Explain this concept to a class of 8-year-olds."</p>
+    </div>
+    <div class="tip-card">
+      <div class="tip-num">ROLE IDEAS</div>
+      <p>"You are a sceptical investor. Find every flaw in my business plan."</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ SYSTEM PROMPT ══ -->
+<section class="section" id="system">
+  <div class="section-label">Technique 05</div>
+
+  <div class="technique-hero">
+    <div class="technique-icon-big">⚙️</div>
+    <div class="technique-meta">
+      <h2>System Prompt</h2>
+      <p>A hidden set of instructions that defines the AI's identity, rules, and behaviour for an entire conversation — set before the first message.</p>
+      <span class="technique-badge" style="background:var(--teal-bg);border-color:rgba(34,211,238,0.25);color:var(--teal);">Used in AI Products & Chatbots</span>
+    </div>
+  </div>
+
+  <div class="analogy-pill">
+    <div class="ap-icon">📋</div>
+    <div>
+      <div class="ap-label">Simple Analogy</div>
+      <div class="ap-text">When a new employee joins a company, they get an employee handbook on Day 1. It tells them their job title, what to say to customers, what topics to avoid, and what tone to use. Every interaction that follows is shaped by that handbook. A system prompt is exactly that — the AI's handbook for your app or conversation.</div>
+    </div>
+  </div>
+
+  <h3 style="font-size:14px; font-weight:500; color:var(--text-muted); margin-bottom:10px;">Use it when:</h3>
+  <div class="use-when">
+    <span class="use-tag">Building chatbots</span>
+    <span class="use-tag">Setting brand tone</span>
+    <span class="use-tag">Restricting topics</span>
+    <span class="use-tag">Creating AI products</span>
+    <span class="use-tag">Consistent personality</span>
+  </div>
+
+  <div class="comparison-grid">
+    <div class="prompt-card bad">
+      <div class="pc-header"><div class="pc-dot"></div> Bad System Prompt</div>
+      <div class="pc-body">
+        <div class="pc-prompt">
+          <div class="pc-prompt-label">System Prompt</div>
+          <div class="pc-prompt-text">You are a helpful assistant. Answer questions.</div>
+        </div>
+        <div class="pc-response">
+          <div class="pc-response-label">LLM says (to: "Where's my order?")</div>
+          <div class="pc-response-text">I'd be happy to help with that! To track your order, you'll need to provide your order number. You can usually find this in your confirmation email. Alternatively, if you have an account, you can log in and check the "My Orders" section. Is there anything else I can assist you with today?</div>
+        </div>
+      </div>
+    </div>
+    <div class="prompt-card good">
+      <div class="pc-header"><div class="pc-dot"></div> Good System Prompt</div>
+      <div class="pc-body">
+        <div class="pc-prompt">
+          <div class="pc-prompt-label">System Prompt</div>
+          <div class="pc-prompt-text">You are "Riya", a friendly support agent for FreshBox — an online grocery delivery app in India. Only answer questions about orders, delivery, and products. For anything else, say: "I can only help with FreshBox queries!" Keep replies under 3 sentences. Use a warm, casual Indian English tone.</div>
+        </div>
+        <div class="pc-response">
+          <div class="pc-response-label">LLM says (to: "Where's my order?")</div>
+          <div class="pc-response-text">Hey! Your order is on its way and should reach you by 6 PM today. You can track it live using the link in your confirmation SMS — just tap it anytime. Let me know if you need anything else! 😊</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="why-box">
+    <h4>💬 Why the good system prompt works</h4>
+    <ul class="why-list">
+      <li>Name + brand ("Riya" from "FreshBox") creates identity and trust</li>
+      <li>Topic restriction ensures the bot stays focused — no random tangents</li>
+      <li>Reply length limit ("under 3 sentences") keeps conversations fast</li>
+      <li>Tone instruction ("warm, casual Indian English") matches the target audience</li>
+      <li>You set these rules once — they apply to every message automatically</li>
+    </ul>
+  </div>
+</section>
+
+<!-- ══ GOLDEN RULES ══ -->
+<section class="section" id="rules">
+  <div class="section-label">Master Tips</div>
+  <h2 class="section-title">The 6 golden rules of prompting</h2>
+  <p class="section-desc">Apply these to every single prompt you write — regardless of which technique you use.</p>
+
+  <div class="rules-grid">
+    <div class="rule-card">
+      <div class="rule-number">01</div>
+      <h3>Be specific, not vague</h3>
+      <p>Every vague word is a chance for the AI to misunderstand. Replace "write something" with "write a 100-word product description for..."</p>
+    </div>
+    <div class="rule-card">
+      <div class="rule-number">02</div>
+      <h3>State the format</h3>
+      <p>Tell the AI exactly how the output should look: bullet points, numbered list, table, paragraph, JSON, code, email, etc.</p>
+    </div>
+    <div class="rule-card">
+      <div class="rule-number">03</div>
+      <h3>Define your audience</h3>
+      <p>"Explain to a 10-year-old" vs "Explain to a PhD student" — same topic, completely different language and depth.</p>
+    </div>
+    <div class="rule-card">
+      <div class="rule-number">04</div>
+      <h3>Give context</h3>
+      <p>The more background you give, the better the answer. "I'm a freelancer, I have a difficult client who..." beats just "help with client".</p>
+    </div>
+    <div class="rule-card">
+      <div class="rule-number">05</div>
+      <h3>Set constraints</h3>
+      <p>Word limits, tone, language, what to avoid — constraints are your friends. "Under 50 words, no jargon, friendly tone" is powerful.</p>
+    </div>
+    <div class="rule-card">
+      <div class="rule-number">06</div>
+      <h3>Iterate and improve</h3>
+      <p>If the first answer isn't great, refine your prompt. Prompting is a dialogue — ask the AI to "make it shorter", "add examples", "change the tone".</p>
+    </div>
+  </div>
+</section>
+
+<!-- ══ CHEAT SHEET ══ -->
+<section class="section" id="cheatsheet">
+  <div class="section-label">Quick Reference</div>
+  <h2 class="section-title">Prompt Engineering Cheat Sheet</h2>
+  <p class="section-desc">Save or screenshot this table. Use it every time you sit down to write a prompt.</p>
+
+  <div style="overflow-x:auto; border-radius:14px; border:1px solid var(--border);">
+    <table class="cheatsheet-table">
+      <thead>
+        <tr>
+          <th>Technique</th>
+          <th>When to use</th>
+          <th>Magic phrase</th>
+          <th>Real example</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>🎯 Zero-shot</td>
+          <td>Simple, direct tasks with clear instructions</td>
+          <td>Just write the task clearly with format + audience</td>
+          <td>"Summarise this paragraph in 2 sentences for a beginner."</td>
+        </tr>
+        <tr>
+          <td>📚 Few-shot</td>
+          <td>When you want a specific format or style</td>
+          <td>Input → Output (repeat 3x), then ask</td>
+          <td>Give 3 example classifications, then ask AI to classify new ones</td>
+        </tr>
+        <tr>
+          <td>🧠 Chain of Thought</td>
+          <td>Complex reasoning, maths, multi-step logic</td>
+          <td>"Think step by step."</td>
+          <td>"Solve this problem. Think step by step."</td>
+        </tr>
+        <tr>
+          <td>🎭 Role Prompting</td>
+          <td>Expert feedback, specific tone, audience writing</td>
+          <td>"You are a [expert]. [Task]."</td>
+          <td>"You are a financial advisor. Review my budget plan."</td>
+        </tr>
+        <tr>
+          <td>⚙️ System Prompt</td>
+          <td>Building AI chatbots, apps, consistent personas</td>
+          <td>Set rules before conversation starts</td>
+          <td>"You are Riya from FreshBox. Only answer delivery questions."</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="divider"></div>
+
+  <h3 style="font-family:'Syne',sans-serif; font-size:18px; font-weight:600; margin-bottom:1.5rem;">Before vs After: The Transformation</h3>
+
+  <div class="comparison-grid">
+    <div class="prompt-card bad">
+      <div class="pc-header"><div class="pc-dot"></div> Beginner prompts sound like...</div>
+      <div class="pc-body">
+        <div class="pc-response" style="padding:1rem;">
+          <div class="pc-response-text" style="display:flex;flex-direction:column;gap:10px;">
+            <div style="padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:13px;">"Write a blog post"</div>
+            <div style="padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:13px;">"Help me with email"</div>
+            <div style="padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:13px;">"Tell me about AI"</div>
+            <div style="padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:13px;">"Fix my code"</div>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="prompt-card good">
+      <div class="pc-header"><div class="pc-dot"></div> Expert prompts sound like...</div>
+      <div class="pc-body">
+        <div class="pc-response" style="padding:1rem;">
+          <div class="pc-response-text" style="display:flex;flex-direction:column;gap:10px;">
+            <div style="padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:13px;color:var(--text-muted);">"Write a 500-word blog intro for working moms, casual tone, include a hook"</div>
+            <div style="padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:13px;color:var(--text-muted);">"Write a follow-up sales email to a warm lead. Keep it under 80 words, confident tone"</div>
+            <div style="padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:13px;color:var(--text-muted);">"Explain how LLMs work to a non-technical manager in 3 bullet points"</div>
+            <div style="padding:8px 12px;background:var(--surface2);border-radius:8px;font-size:13px;color:var(--text-muted);">"Find the bug in this Python function and explain why it fails, step by step"</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="big-tip" style="margin-top:2rem;">
+    <div class="bt-icon">🚀</div>
+    <h3>You're ready to start!</h3>
+    <p>Prompt engineering is a learnable skill. The more you practice, the more naturally it comes. Start with zero-shot, add context, and layer in the other techniques as needed. <strong style="color:var(--accent2)">The AI is only as powerful as your prompt.</strong></p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <p style="margin-bottom:8px;">⚡ <strong>Prompt Engineering Crash Course</strong></p>
+  <p>Made with ❤️ for learners everywhere. Share freely — teach someone today.</p>
+</footer>
+
+</body>
+</html>
